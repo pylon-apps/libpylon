@@ -16,7 +16,7 @@ use futures::{AsyncRead, AsyncWrite};
 use magic_wormhole::rendezvous::DEFAULT_RENDEZVOUS_SERVER;
 use magic_wormhole::transfer::{self, AppVersion, ReceiveRequest, TransferError};
 use magic_wormhole::transit::{
-    Abilities, RelayHint, RelayHintParseError, TransitInfo, DEFAULT_RELAY_SERVER,
+    self, RelayHint, RelayHintParseError, TransitInfo, DEFAULT_RELAY_SERVER,
 };
 use magic_wormhole::{AppConfig, AppID, Code, Wormhole, WormholeError};
 use serde::Serialize;
@@ -25,6 +25,9 @@ use url::ParseError;
 
 /// Awaitable object that will perform the client-client handshake and yield the wormhole object on success.
 type Handshake = dyn Future<Output = Result<Wormhole, WormholeError>> + Unpin + Send + Sync;
+
+/// Type alias for magic-wormhole transit abilities.
+pub type Abilities = transit::Abilities;
 
 /// Custom error type for the various errors a Pylon may encounter.
 ///
@@ -82,6 +85,8 @@ pub struct Pylon {
     relay_url: String,
     #[builder(default = "DEFAULT_RENDEZVOUS_SERVER.into()")]
     rendezvous_url: String,
+    #[builder(default = "Abilities::ALL_ABILITIES")]
+    abilities: Abilities,
     #[builder(setter(skip))]
     handshake: Option<Box<Handshake>>,
     #[builder(setter(skip))]
@@ -145,7 +150,7 @@ impl Pylon {
     {
         // TODO: allow caller to specify transit handler, abilities and relay hints
         let transit_handler = |_: TransitInfo, _: SocketAddr| {};
-        let transit_abilities = Abilities::ALL_ABILITIES;
+        let transit_abilities = self.abilities;
         let relay_hints = vec![RelayHint::from_urls(None, [self.relay_url.parse()?])?];
 
         let sender = match self.handshake.take() {
@@ -187,7 +192,7 @@ impl Pylon {
         cancel_handler: C,
     ) -> Result<(), PylonError> {
         // TODO: allow caller to specify transit abilities and relay hints
-        let transit_abilities = Abilities::ALL_ABILITIES;
+        let transit_abilities = self.abilities;
         let relay_hints = vec![RelayHint::from_urls(None, [self.relay_url.parse()?])?];
 
         let (_, wh) = Wormhole::connect_with_code(self.config(), Code(code)).await?;
