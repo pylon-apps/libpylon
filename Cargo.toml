@@ -1,6 +1,7 @@
 [package]
 name = "libpylon"
 description = "Core library for the Pylon suite of apps"
+authors = ["Nikhil Prabhu <nikhilprabhu98@gmail.com"]
 license = "GPL-3.0"
 repository = "https://github.com/pylon-apps/libpylon"
 documentation = "https://docs.rs/libpylon"
