@@ -7,6 +7,7 @@ repository = "https://github.com/pylon-apps/libpylon"
 documentation = "https://docs.rs/libpylon"
 version = "0.7.0"
 edition = "2021"
+rust-version = "1.63.0"
 
 [dependencies]
 derive_builder = "0.12.0"
