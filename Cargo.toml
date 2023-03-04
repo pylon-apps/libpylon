@@ -1,5 +1,8 @@
 [package]
 name = "libpylon"
+description = "Core library for the Pylon suite of apps"
+license = "GPL-3.0"
+repository = "https://github.com/pylon-apps/libpylon"
 version = "0.7.0"
 edition = "2021"
 
