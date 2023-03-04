@@ -23,8 +23,6 @@ use serde::Serialize;
 use thiserror::Error;
 use url::ParseError;
 
-use consts::APP_ID;
-
 /// Awaitable object that will perform the client-client handshake and yield the wormhole object on success.
 type Handshake = dyn Future<Output = Result<Wormhole, WormholeError>> + Unpin + Send + Sync;
 
@@ -79,7 +77,6 @@ impl Serialize for PylonError {
 /// High-level wrapper over a magic-wormhole that allows for secure file-transfers.
 #[derive(Builder)]
 pub struct Pylon {
-    #[builder(default = "APP_ID.into()")]
     id: String,
     #[builder(default = "DEFAULT_RELAY_SERVER.into()")]
     relay_url: String,
