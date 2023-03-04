@@ -13,6 +13,11 @@
       "args": ["--release"]
     },
     {
+      "label": "libpylon: Publish",
+      "type": "cargo",
+      "command": "publish"
+    },
+    {
       "label": "libpylon: Clean",
       "type": "cargo",
       "command": "clean"
