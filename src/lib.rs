@@ -78,7 +78,8 @@ impl Serialize for PylonError {
 
 // TODO: improve documentation
 /// High-level wrapper over a magic-wormhole that allows for secure file-transfers.
-#[derive(Builder)]
+#[derive(Serialize, Builder)]
+#[serde(rename_all = "camelCase")]
 pub struct Pylon {
     id: String,
     #[builder(default = "DEFAULT_RELAY_SERVER.into()")]
@@ -87,8 +88,10 @@ pub struct Pylon {
     rendezvous_url: String,
     #[builder(default = "Abilities::ALL_ABILITIES")]
     abilities: Abilities,
+    #[serde(skip)]
     #[builder(setter(skip))]
     handshake: Option<Box<Handshake>>,
+    #[serde(skip)]
     #[builder(setter(skip))]
     transfer_request: Option<ReceiveRequest>,
 }
