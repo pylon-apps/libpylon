@@ -63,6 +63,10 @@ pub enum PylonError {
     /// An error occured with the underlying wormhole library that we aren't explicitly matching against.
     #[error(transparent)]
     InternalError(#[from] WormholeError),
+    #[error(transparent)]
+    /// An error occured with building the Pylon.
+    /// This is just a wrapper to allow easy propagation of builder errors with the `?` operator.
+    BuilderError(#[from] PylonBuilderError),
     /// Generic error messages.
     #[error("An error occured: {0}")]
     Error(
