@@ -7,6 +7,7 @@
 pub mod consts;
 
 use std::borrow::Cow;
+use std::error::Error;
 use std::future::Future;
 use std::net::SocketAddr;
 use std::path::PathBuf;
@@ -64,7 +65,11 @@ pub enum PylonError {
     InternalError(#[from] WormholeError),
     /// Generic error messages.
     #[error("An error occured: {0}")]
-    Error(Box<str>),
+    Error(
+        #[from]
+        #[source]
+        Box<dyn Error>,
+    ),
 }
 
 impl Serialize for PylonError {
