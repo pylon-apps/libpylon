@@ -10,10 +10,9 @@ use std::borrow::Cow;
 use std::error::Error;
 use std::future::Future;
 use std::net::SocketAddr;
-use std::path::PathBuf;
+use std::path::Path;
 
 use derive_builder::Builder;
-use futures::{AsyncRead, AsyncWrite};
 use magic_wormhole::rendezvous::DEFAULT_RENDEZVOUS_SERVER;
 use magic_wormhole::transfer::{self, AppVersion, ReceiveRequest, TransferError};
 use magic_wormhole::transit::{
@@ -21,6 +20,7 @@ use magic_wormhole::transit::{
 };
 use magic_wormhole::{AppConfig, AppID, Code, Wormhole, WormholeError};
 use serde::Serialize;
+use smol::fs::File;
 use thiserror::Error;
 use url::ParseError;
 
@@ -140,26 +140,36 @@ impl Pylon {
     ///
     /// # Arguments
     ///
-    /// * `file` - The file reader of the file to send.
-    /// * `file_name` - The name of the file.
-    /// * `file_size` - The size of the file. **NOTE**: You must ensure this argument correctly matches the actual bytes
-    ///                 contained in the file reader.
+    /// * `file` - The path of the file to send.
     /// * `progress_handler` - Callback function that accepts the number of bytes sent and the total number of bytes to send.
     /// * `cancel_handler` - Callback function to request cancellation of the file transfer.
-    pub async fn send_file<F, N, P, C>(
+    pub async fn send_file<F, P, C>(
         &mut self,
-        file: &mut F,
-        file_name: N,
-        file_size: u64,
+        file: F,
         progress_handler: P,
         cancel_handler: C,
     ) -> Result<(), PylonError>
     where
-        F: AsyncRead + Unpin,
-        N: Into<PathBuf>,
+        F: AsRef<Path>,
         P: FnMut(u64, u64) + 'static,
         C: Future<Output = ()>,
     {
+        let file_name = file
+            .as_ref()
+            .file_name()
+            .ok_or(PylonError::Error("could not extract file name".into()))?
+            .to_str()
+            .ok_or(PylonError::Error(
+                "could not convert file name to str".into(),
+            ))?;
+        let mut file = File::open(&file)
+            .await
+            .map_err(|e| PylonError::Error(e.into()))?;
+        let file_size = file
+            .metadata()
+            .await
+            .map_err(|e| PylonError::Error(e.into()))?
+            .len();
         // TODO: allow caller to specify transit handler, abilities and relay hints
         let transit_handler = |_: TransitInfo, _: SocketAddr| {};
         let transit_abilities = self.abilities;
@@ -176,7 +186,7 @@ impl Pylon {
                 transfer::send_file(
                     wh,
                     relay_hints,
-                    file,
+                    &mut file,
                     file_name,
                     file_size,
                     transit_abilities,
@@ -231,16 +241,19 @@ impl Pylon {
         cancel_handler: C,
     ) -> Result<(), PylonError>
     where
-        F: AsyncWrite + Unpin,
+        F: AsRef<Path>,
         P: FnMut(u64, u64) + 'static,
         C: Future<Output = ()>,
     {
+        let mut file = File::create(&file)
+            .await
+            .map_err(|e| PylonError::Error(e.into()))?;
         // TODO: allow caller to specify transit abilities
         let transit_handler = |_: TransitInfo, _: SocketAddr| {};
         match self.transfer_request.take() {
             Some(r) => {
                 // TODO: allow caller to accept or reject transfer
-                r.accept(transit_handler, progress_handler, file, cancel_handler)
+                r.accept(transit_handler, progress_handler, &mut file, cancel_handler)
                     .await?;
             }
             None => {

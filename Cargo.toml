@@ -14,8 +14,8 @@ status = "experimental"
 
 [dependencies]
 derive_builder = "0.12.0"
-futures = "0.3.26"
 magic-wormhole = "0.6.0"
 serde = "1.0.152"
+smol = "1.3.0"
 thiserror = "1.0.38"
 url = "2.3.1"
