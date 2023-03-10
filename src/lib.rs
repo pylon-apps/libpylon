@@ -230,13 +230,13 @@ impl Pylon {
     ///
     /// # Arguments
     ///
-    /// * `file` - The file writer for the destination file.
+    /// * `file` - The destination file path.
     /// * `progress_handler` - Callback function that accepts the number of bytes received and the total number of bytes
     ///                        to receive.
     /// * `cancel_handler` - Callback function to request cancellation of the file transfer.
     pub async fn receive_file<F, P, C>(
         &mut self,
-        file: &mut F,
+        file: F,
         progress_handler: P,
         cancel_handler: C,
     ) -> Result<(), PylonError>
