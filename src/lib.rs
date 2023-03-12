@@ -67,12 +67,12 @@ pub enum PylonError {
     /// An error occured with building the Pylon.
     /// This is just a wrapper to allow easy propagation of builder errors with the `?` operator.
     BuilderError(#[from] PylonBuilderError),
-    /// Generic error messages.
+    /// Generic errors.
     #[error("An error occured: {0}")]
     Error(
         #[from]
         #[source]
-        Box<dyn Error>,
+        Box<dyn Error + Send + Sync>,
     ),
 }
 
