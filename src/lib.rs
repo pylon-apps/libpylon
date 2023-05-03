@@ -229,18 +229,13 @@ impl Pylon {
     // TODO: add example(s)
     /// Rejects a pending transfer request.
     pub async fn reject_transfer(&mut self) -> Result<(), PylonError> {
-        match self.transfer_request.take() {
-            Some(r) => {
-                r.reject().await?;
-            }
-            None => {
-                return Err(PylonError::Error(
-                    "There is currently no active transfer request".into(),
-                ))
-            }
+        if let Some(r) = self.transfer_request.take() {
+            r.reject().await?;
         }
 
-        Ok(())
+        return Err(PylonError::Error(
+            "There is currently no active transfer request".into(),
+        ));
     }
 
     // TODO: add example(s)
@@ -268,19 +263,14 @@ impl Pylon {
             .map_err(|e| PylonError::Error(e.into()))?;
         // TODO: allow caller to specify transit abilities
         let transit_handler = |_: TransitInfo, _: SocketAddr| {};
-        match self.transfer_request.take() {
-            Some(r) => {
-                r.accept(transit_handler, progress_handler, &mut file, cancel_handler)
-                    .await?;
-            }
-            None => {
-                return Err(PylonError::Error(
-                    "There is currently no active transfer request".into(),
-                ));
-            }
+        if let Some(r) = self.transfer_request.take() {
+            r.accept(transit_handler, progress_handler, &mut file, cancel_handler)
+                .await?;
         }
 
-        Ok(())
+        return Err(PylonError::Error(
+            "There is currently no active transfer request".into(),
+        ));
     }
 
     /// Destroys the Pylon.
