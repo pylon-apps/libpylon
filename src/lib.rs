@@ -244,7 +244,7 @@ impl Pylon {
     }
 
     // TODO: add example(s)
-    /// Accepts a file transfer and receives a file over the wormhole network from the sender Pylon.
+    /// Accepts an active transfer and receives a file over the wormhole network from the sender Pylon.
     ///
     /// # Arguments
     ///
@@ -252,7 +252,7 @@ impl Pylon {
     /// * `progress_handler` - Callback function that accepts the number of bytes received and the total number of bytes
     ///                        to receive.
     /// * `cancel_handler` - Callback function to request cancellation of the file transfer.
-    pub async fn receive_file<F, P, C>(
+    pub async fn accept_transfer<F, P, C>(
         &mut self,
         file: F,
         progress_handler: P,
