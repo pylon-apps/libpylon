@@ -203,13 +203,13 @@ impl Pylon {
     }
 
     // TODO: add example(s)
-    /// Initiates a request for a file transfer from the sender Pylon.
+    /// Requests for a file transfer from the sender Pylon.
     ///
     /// # Arguments
     ///
     /// * `code` - The wormhole code to authenticate the connection.
     /// * `cancel_handler` - Callback function to request cancellation of the file transfer.
-    pub async fn request_file<C: Future<Output = ()>>(
+    pub async fn request_transfer<C: Future<Output = ()>>(
         &mut self,
         code: String,
         cancel_handler: C,
