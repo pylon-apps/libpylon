@@ -227,6 +227,23 @@ impl Pylon {
     }
 
     // TODO: add example(s)
+    /// Rejects a pending transfer request.
+    pub async fn reject_transfer(&mut self) -> Result<(), PylonError> {
+        match self.transfer_request.take() {
+            Some(r) => {
+                r.reject().await?;
+            }
+            None => {
+                return Err(PylonError::Error(
+                    "There is currently no active transfer request".into(),
+                ))
+            }
+        }
+
+        Ok(())
+    }
+
+    // TODO: add example(s)
     /// Accepts a file transfer and receives a file over the wormhole network from the sender Pylon.
     ///
     /// # Arguments
@@ -253,7 +270,6 @@ impl Pylon {
         let transit_handler = |_: TransitInfo, _: SocketAddr| {};
         match self.transfer_request.take() {
             Some(r) => {
-                // TODO: allow caller to accept or reject transfer
                 r.accept(transit_handler, progress_handler, &mut file, cancel_handler)
                     .await?;
             }
