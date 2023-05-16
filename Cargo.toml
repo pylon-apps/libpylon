@@ -5,7 +5,7 @@ authors = ["Nikhil Prabhu <nikhilprabhu98@gmail.com"]
 license = "GPL-3.0"
 repository = "https://github.com/pylon-apps/libpylon"
 documentation = "https://docs.rs/libpylon"
-version = "0.14.0"
+version = "0.15.0"
 edition = "2021"
 rust-version = "1.63.0"
 
