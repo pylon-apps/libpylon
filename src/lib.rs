@@ -15,9 +15,8 @@ use std::path::Path;
 use derive_builder::Builder;
 use magic_wormhole::rendezvous::DEFAULT_RENDEZVOUS_SERVER;
 use magic_wormhole::transfer::{self, AppVersion, ReceiveRequest, TransferError};
-use magic_wormhole::transit::{
-    self, RelayHint, RelayHintParseError, TransitInfo, DEFAULT_RELAY_SERVER,
-};
+pub use magic_wormhole::transit::TransitInfo;
+use magic_wormhole::transit::{self, RelayHint, RelayHintParseError, DEFAULT_RELAY_SERVER};
 use magic_wormhole::{AppConfig, AppID, Code, Wormhole, WormholeError};
 use serde::Serialize;
 use smol::fs::File;
