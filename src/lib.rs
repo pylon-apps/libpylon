@@ -143,16 +143,19 @@ impl Pylon {
     ///
     /// * `file` - The path of the file to send.
     /// * `progress_handler` - Callback function that accepts the number of bytes sent and the total number of bytes to send.
+    /// * `transit_handler` - Callback function that accepts the transit information and socket address of the connection.
     /// * `cancel_handler` - Callback function to request cancellation of the file transfer.
-    pub async fn send_file<F, P, C>(
+    pub async fn send_file<F, P, T, C>(
         &mut self,
         file: F,
         progress_handler: P,
+        transit_handler: T,
         cancel_handler: C,
     ) -> Result<(), PylonError>
     where
         F: AsRef<Path>,
         P: FnMut(u64, u64) + 'static,
+        T: FnMut(TransitInfo, SocketAddr) + 'static,
         C: Future<Output = ()>,
     {
         let file_name = file
@@ -171,8 +174,7 @@ impl Pylon {
             .await
             .map_err(|e| PylonError::Error(e.into()))?
             .len();
-        // TODO: allow caller to specify transit handler, abilities and relay hints
-        let transit_handler = |_: TransitInfo, _: SocketAddr| {};
+        // TODO: allow caller to specify custom relay hints
         let transit_abilities = self.abilities;
         let relay_hints = vec![RelayHint::from_urls(None, [self.relay_url.parse()?])?];
 
