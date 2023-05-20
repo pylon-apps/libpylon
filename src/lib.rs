@@ -136,7 +136,7 @@ impl Pylon {
     }
 
     // TODO: add example(s)
-    /// Sends a file over the wormhole network to the receiver Pylon.
+    /// Starts a file transfer over the wormhole network to the receiver Pylon.
     ///
     /// # Arguments
     ///
@@ -144,7 +144,7 @@ impl Pylon {
     /// * `progress_handler` - Callback function that accepts the number of bytes sent and the total number of bytes to send.
     /// * `transit_handler` - Callback function that accepts the transit information and socket address of the connection.
     /// * `cancel_handler` - Callback function to request cancellation of the file transfer.
-    pub async fn send_file<F, P, T, C>(
+    pub async fn start_transfer<F, P, T, C>(
         &mut self,
         file: F,
         progress_handler: P,
@@ -248,22 +248,22 @@ impl Pylon {
     /// * `progress_handler` - Callback function that accepts the number of bytes received and the total number of bytes
     ///                        to receive.
     /// * `cancel_handler` - Callback function to request cancellation of the file transfer.
-    pub async fn accept_transfer<F, P, C>(
+    pub async fn accept_transfer<F, P, T, C>(
         &mut self,
         file: F,
         progress_handler: P,
+        transit_handler: T,
         cancel_handler: C,
     ) -> Result<(), PylonError>
     where
         F: AsRef<Path>,
         P: FnMut(u64, u64) + 'static,
+        T: FnMut(TransitInfo, SocketAddr) + 'static,
         C: Future<Output = ()>,
     {
         let mut file = File::create(&file)
             .await
             .map_err(|e| PylonError::Error(e.into()))?;
-        // TODO: allow caller to specify transit abilities
-        let transit_handler = |_: TransitInfo, _: SocketAddr| {};
         if let Some(r) = self.transfer_request.take() {
             r.accept(transit_handler, progress_handler, &mut file, cancel_handler)
                 .await?;
