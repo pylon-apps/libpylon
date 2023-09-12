@@ -53,23 +53,23 @@ pub enum PylonError {
     /// This is just a wrapper over the `url` library's `ParseError`.
     #[error(transparent)]
     UrlParseError(#[from] ParseError),
-    /// Error occured during the transfer.
-    /// This is just a wrapper over the underlying womhole library's error of the same name.
-    #[error("Error occured during transfer")]
+    /// Error occurred during the transfer.
+    /// This is just a wrapper over the underlying wormhole library's error of the same name.
+    #[error("Error occurred during transfer")]
     TransferError(
         #[from]
         #[source]
         TransferError,
     ),
-    /// An error occured with the underlying wormhole library that we aren't explicitly matching against.
+    /// An error occurred with the underlying wormhole library that we aren't explicitly matching against.
     #[error(transparent)]
     InternalError(#[from] WormholeError),
-    /// An error occured with building the Pylon.
+    /// An error occurred with building the Pylon.
     /// This is just a wrapper to allow easy propagation of builder errors with the `?` operator.
     #[error(transparent)]
     BuilderError(#[from] PylonBuilderError),
     /// Generic errors.
-    #[error("An error occured: {0}")]
+    #[error("An error occurred: {0}")]
     Error(
         #[from]
         #[source]
