@@ -106,12 +106,13 @@ pub struct Pylon {
     transfer_request: Option<ReceiveRequest>,
 }
 
+// TODO: find a way to refactor this redundant signature.
 /// Returns a default transit handler if the specified handler is `None`.
 ///
 /// # Arguments
 ///
 /// * `handler` - The transit handler.
-fn get_transit_handler<T>(mut handler: Option<T>) -> Box<dyn T>
+fn get_transit_handler<T>(mut handler: Option<T>) -> Box<dyn FnMut(TransitInfo, SocketAddr) + 'static>
 where
     T: FnMut(TransitInfo, SocketAddr) + 'static
 {
@@ -121,12 +122,13 @@ where
     }
 }
 
+// TODO: find a way to refactor this redundant signature.
 /// Returns a default progress handler if the specified handler is `None`.
 ///
 /// # Arguments
 ///
 /// * `handler` - The progress handler.
-fn get_progress_handler<P>(mut handler: Option<P>) -> Box<dyn P>
+fn get_progress_handler<P>(mut handler: Option<P>) -> Box<dyn FnMut(u64, u64) + 'static>
     where
         P: FnMut(u64, u64) + 'static,
 {
@@ -136,14 +138,15 @@ fn get_progress_handler<P>(mut handler: Option<P>) -> Box<dyn P>
     }
 }
 
+// TODO: find a way to refactor this redundant signature.
 /// Returns a default cancel handler if the specified handler is `None`.
 ///
 /// # Arguments
 ///
 /// * `handler` - The cancel handler.
-fn get_cancel_handler<C>(mut handler: Option<C>) -> Pin<dyn C>
+fn get_cancel_handler<C>(mut handler: Option<C>) -> Pin<Box<dyn Future<Output=()>>>
     where
-        C: Future<Output = ()>
+        C: Future<Output = ()> + 'static
 {
     match handler.take() {
         Some(c) => Box::pin(c),
@@ -201,7 +204,7 @@ impl Pylon {
         F: AsRef<Path>,
         P: FnMut(u64, u64) + 'static,
         T: FnMut(TransitInfo, SocketAddr) + 'static,
-        C: Future<Output = ()>,
+        C: Future<Output = ()> + 'static,
     {
         let file_name = file
             .as_ref()
@@ -261,7 +264,7 @@ impl Pylon {
     ///
     /// * `code` - The wormhole code to authenticate the connection.
     /// * `cancel_handler` - Callback function to request cancellation of the file transfer.
-    pub async fn request_transfer<C: Future<Output = ()>>(
+    pub async fn request_transfer<C: Future<Output = ()> + 'static>(
         &mut self,
         code: String,
         cancel_handler: Option<C>,
@@ -313,7 +316,7 @@ impl Pylon {
         F: AsRef<Path>,
         P: FnMut(u64, u64) + 'static,
         T: FnMut(TransitInfo, SocketAddr) + 'static,
-        C: Future<Output = ()>,
+        C: Future<Output = ()> + 'static,
     {
         // We're providing fallback/default handlers if the caller hasn't provided them.
         let transit_handler: Box<dyn FnMut(TransitInfo, SocketAddr)> = get_transit_handler(transit_handler);
