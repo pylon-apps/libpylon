@@ -112,9 +112,11 @@ pub struct Pylon {
 /// # Arguments
 ///
 /// * `handler` - The transit handler.
-fn get_transit_handler<T>(mut handler: Option<T>) -> Box<dyn FnMut(TransitInfo, SocketAddr) + 'static>
+fn get_transit_handler<T>(
+    mut handler: Option<T>,
+) -> Box<dyn FnMut(TransitInfo, SocketAddr) + 'static>
 where
-    T: FnMut(TransitInfo, SocketAddr) + 'static
+    T: FnMut(TransitInfo, SocketAddr) + 'static,
 {
     match handler.take() {
         Some(t) => Box::new(t),
@@ -129,8 +131,8 @@ where
 ///
 /// * `handler` - The progress handler.
 fn get_progress_handler<P>(mut handler: Option<P>) -> Box<dyn FnMut(u64, u64) + 'static>
-    where
-        P: FnMut(u64, u64) + 'static,
+where
+    P: FnMut(u64, u64) + 'static,
 {
     match handler.take() {
         Some(p) => Box::new(p),
@@ -144,9 +146,9 @@ fn get_progress_handler<P>(mut handler: Option<P>) -> Box<dyn FnMut(u64, u64) + 
 /// # Arguments
 ///
 /// * `handler` - The cancel handler.
-fn get_cancel_handler<C>(mut handler: Option<C>) -> Pin<Box<dyn Future<Output=()>>>
-    where
-        C: Future<Output = ()> + 'static
+fn get_cancel_handler<C>(mut handler: Option<C>) -> Pin<Box<dyn Future<Output = ()>>>
+where
+    C: Future<Output = ()> + 'static,
 {
     match handler.take() {
         Some(c) => Box::pin(c),
@@ -227,7 +229,8 @@ impl Pylon {
         let relay_hints = vec![RelayHint::from_urls(None, [self.relay_url.parse()?])?];
 
         // We're providing fallback/default handlers if the caller hasn't provided them.
-        let transit_handler: Box<dyn FnMut(TransitInfo, SocketAddr)> = get_transit_handler(transit_handler);
+        let transit_handler: Box<dyn FnMut(TransitInfo, SocketAddr)> =
+            get_transit_handler(transit_handler);
         let progress_handler: Box<dyn FnMut(u64, u64)> = get_progress_handler(progress_handler);
         let cancel_handler: Pin<Box<dyn Future<Output = ()>>> = get_cancel_handler(cancel_handler);
 
@@ -319,7 +322,8 @@ impl Pylon {
         C: Future<Output = ()> + 'static,
     {
         // We're providing fallback/default handlers if the caller hasn't provided them.
-        let transit_handler: Box<dyn FnMut(TransitInfo, SocketAddr)> = get_transit_handler(transit_handler);
+        let transit_handler: Box<dyn FnMut(TransitInfo, SocketAddr)> =
+            get_transit_handler(transit_handler);
         let progress_handler: Box<dyn FnMut(u64, u64)> = get_progress_handler(progress_handler);
         let cancel_handler: Pin<Box<dyn Future<Output = ()>>> = get_cancel_handler(cancel_handler);
 
