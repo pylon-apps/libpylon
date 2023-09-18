@@ -106,6 +106,51 @@ pub struct Pylon {
     transfer_request: Option<ReceiveRequest>,
 }
 
+/// Returns a default transit handler if the specified handler is `None`.
+///
+/// # Arguments
+///
+/// * `handler` - The transit handler.
+fn get_transit_handler<T>(mut handler: Option<T>) -> Box<dyn T>
+where
+    T: FnMut(TransitInfo, SocketAddr) + 'static
+{
+    match handler.take() {
+        Some(t) => Box::new(t),
+        None => Box::new(|_: TransitInfo, _: SocketAddr| {}),
+    }
+}
+
+/// Returns a default progress handler if the specified handler is `None`.
+///
+/// # Arguments
+///
+/// * `handler` - The progress handler.
+fn get_progress_handler<P>(mut handler: Option<P>) -> Box<dyn P>
+    where
+        P: FnMut(u64, u64) + 'static,
+{
+    match handler.take() {
+        Some(p) => Box::new(p),
+        None => Box::new(|_: u64, _: u64| {}),
+    }
+}
+
+/// Returns a default cancel handler if the specified handler is `None`.
+///
+/// # Arguments
+///
+/// * `handler` - The cancel handler.
+fn get_cancel_handler<C>(mut handler: Option<C>) -> Pin<dyn C>
+    where
+        C: Future<Output = ()>
+{
+    match handler.take() {
+        Some(c) => Box::pin(c),
+        None => Box::pin(async { loop {} }),
+    }
+}
+
 impl Pylon {
     /// Builds and returns a wormhole app config.
     fn config(&self) -> AppConfig<AppVersion> {
@@ -148,9 +193,9 @@ impl Pylon {
     pub async fn start_transfer<F, P, T, C>(
         &mut self,
         file: F,
-        mut progress_handler: Option<P>,
-        mut transit_handler: Option<T>,
-        mut cancel_handler: Option<C>,
+        progress_handler: Option<P>,
+        transit_handler: Option<T>,
+        cancel_handler: Option<C>,
     ) -> Result<(), PylonError>
     where
         F: AsRef<Path>,
@@ -179,21 +224,9 @@ impl Pylon {
         let relay_hints = vec![RelayHint::from_urls(None, [self.relay_url.parse()?])?];
 
         // We're providing fallback/default handlers if the caller hasn't provided them.
-        let transit_handler: Box<dyn FnMut(TransitInfo, SocketAddr)> = match transit_handler.take()
-        {
-            Some(t) => Box::new(t),
-            None => Box::new(|_: TransitInfo, _: SocketAddr| {}),
-        };
-
-        let progress_handler: Box<dyn FnMut(u64, u64)> = match progress_handler.take() {
-            Some(p) => Box::new(p),
-            None => Box::new(|_: u64, _: u64| {}),
-        };
-
-        let cancel_handler: Pin<Box<dyn Future<Output = ()>>> = match cancel_handler.take() {
-            Some(c) => Box::pin(c),
-            None => Box::pin(async { loop {} }),
-        };
+        let transit_handler: Box<dyn FnMut(TransitInfo, SocketAddr)> = get_transit_handler(transit_handler);
+        let progress_handler: Box<dyn FnMut(u64, u64)> = get_progress_handler(progress_handler);
+        let cancel_handler: Pin<Box<dyn Future<Output = ()>>> = get_cancel_handler(cancel_handler);
 
         let sender = match self.handshake.take() {
             None => {
@@ -231,17 +264,14 @@ impl Pylon {
     pub async fn request_transfer<C: Future<Output = ()>>(
         &mut self,
         code: String,
-        mut cancel_handler: Option<C>,
+        cancel_handler: Option<C>,
     ) -> Result<(), PylonError> {
         // TODO: allow caller to specify transit abilities and relay hints
         let transit_abilities = self.abilities;
         let relay_hints = vec![RelayHint::from_urls(None, [self.relay_url.parse()?])?];
 
         // We're providing a fallback/default cancel handler if the caller hasn't provided one.
-        let cancel_handler: Pin<Box<dyn Future<Output = ()>>> = match cancel_handler.take() {
-            Some(c) => Box::pin(c),
-            None => Box::pin(async { loop {} }),
-        };
+        let cancel_handler: Pin<Box<dyn Future<Output = ()>>> = get_cancel_handler(cancel_handler);
 
         let (_, wh) = Wormhole::connect_with_code(self.config(), Code(code)).await?;
         let request =
@@ -275,9 +305,9 @@ impl Pylon {
     pub async fn accept_transfer<F, P, T, C>(
         &mut self,
         file: F,
-        mut progress_handler: Option<P>,
-        mut transit_handler: Option<T>,
-        mut cancel_handler: Option<C>,
+        progress_handler: Option<P>,
+        transit_handler: Option<T>,
+        cancel_handler: Option<C>,
     ) -> Result<(), PylonError>
     where
         F: AsRef<Path>,
@@ -286,21 +316,9 @@ impl Pylon {
         C: Future<Output = ()>,
     {
         // We're providing fallback/default handlers if the caller hasn't provided them.
-        let transit_handler: Box<dyn FnMut(TransitInfo, SocketAddr)> = match transit_handler.take()
-        {
-            Some(t) => Box::new(t),
-            None => Box::new(|_: TransitInfo, _: SocketAddr| {}),
-        };
-
-        let progress_handler: Box<dyn FnMut(u64, u64)> = match progress_handler.take() {
-            Some(p) => Box::new(p),
-            None => Box::new(|_: u64, _: u64| {}),
-        };
-
-        let cancel_handler: Pin<Box<dyn Future<Output = ()>>> = match cancel_handler.take() {
-            Some(c) => Box::pin(c),
-            None => Box::pin(async { loop {} }),
-        };
+        let transit_handler: Box<dyn FnMut(TransitInfo, SocketAddr)> = get_transit_handler(transit_handler);
+        let progress_handler: Box<dyn FnMut(u64, u64)> = get_progress_handler(progress_handler);
+        let cancel_handler: Pin<Box<dyn Future<Output = ()>>> = get_cancel_handler(cancel_handler);
 
         let mut file = File::create(&file)
             .await
